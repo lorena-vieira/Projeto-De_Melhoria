@@ -1,50 +1,10 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
-
+import tkinter as tk
+from tkinter import messagebox
 from docxtpl import DocxTemplate
+from pymongo import MongoClient
+from tkinter import filedialog
+import utils
 
-def get_user_input():
-    km = input("Informe o Km da OAE: ")
-    linha = input("Informe a linha: ")
-    cidade = input("Informe a cidade: ")
-    estado = input("Informe o estado: ")
-    natureza_transposicao = input("Informe a natureza da transposição: ")
-    bitola = input("Informe a bitola: ")
-    tracado = input("Informe o traçado: ")
-    trilhos = input("Informe os trilhos: ")
-    fixacao = input("Informe a fixação: ")
-    comprimento = input("Informe o comprimento: ")
-    largura = input("Informe a largura: ")
-    altura = input("Informe a altura: ")
-
-    return {
-        'km': km,
-        'linha': linha,
-        'cidade': cidade,
-        'estado': estado,
-        'natureza_transposicao': natureza_transposicao,
-        'bitola': bitola,
-        'tracado': tracado,
-        'trilhos': trilhos,
-        'fixacao': fixacao,
-        'comprimento': comprimento,
-        'largura': largura,
-        'altura': altura,
-    }
 
 def generate_diagnostic_report(output_path, user_input):
     # Carregar o modelo docx
@@ -64,36 +24,48 @@ if __name__ == '__main__':
     output_path = 'diagnostic_report.docx'
 
     # Obter informações do usuário
-    user_input = get_user_input()
+    user_input = utils.get_user_input()
 
     # Gerar relatório
-    generate_diagnostic_report(output_path, user_input)
+    #generate_diagnostic_report(output_path, user_input)
 
-    print(f"Relatório gerado com sucesso em {output_path}")
+    #print(f"Relatório gerado com sucesso em {output_path}")
 
 
 #A seguir a criação de tela para seleção de patologias, inserção de fotos e classificação (notas)
 
-import tkinter as tk
-from tkinter import messagebox
-from docxtpl import DocxTemplate
-import sqlite3
+
+CONNECTION_STRING = "mongodb+srv://lorenavieira:lorenas2fabinho@cluster0.f65bx3a.mongodb.net/"
+client = MongoClient(CONNECTION_STRING)
+db = client['PatologiasDescricoes']
+collection = db['anomalias']
 
 class DiagnosticsApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Aplicação de Diagnóstico")
 
-        # Conectar ao banco de dados (substitua 'seu_banco_de_dados.db' pelo nome do seu banco de dados)
-        self.conn = sqlite3.connect('banco_patoloigias_descricoes.db')
-        self.cursor = self.conn.cursor()
-
-        # Interface do Usuário
+                # Interface do Usuário
         self.anomaly_label = tk.Label(root, text="Selecione a Anomalia:")
         self.anomaly_label.pack()
 
         # Obtém anomalias do banco de dados
         self.anomalies = self.fetch_anomalies()
+        self.selected_anomalies = []
+
+        # Checkbox para anomalias
+        self.anomalies_frame = tk.Frame(root)
+        self.anomalies_frame.pack(pady=10)
+        self.anomalies_label = tk.Label(self.anomalies_frame, text="Escolha as Anomalias:")
+        self.anomalies_label.pack()
+
+        for anomaly in self.anomalies:
+            checkbox = tk.Checkbutton(self.anomalies_frame, text=anomaly, variable=anomaly)
+            checkbox.pack()
+
+        # Botão para adicionar fotos e notas
+        self.add_photos_button = tk.Button(root, text="Adicionar Fotos e Notas", command=self.add_photos_and_notes)
+        self.add_photos_button.pack(pady=10)
         self.anomaly_var = tk.StringVar(root)
         self.anomaly_var.set(self.anomalies[0])  # Define o valor padrão
 
@@ -122,10 +94,8 @@ class DiagnosticsApp:
         self.submit_button.pack()
 
     def fetch_anomalies(self):
-        # Substitua 'anomalies_table' pelo nome da sua tabela de anomalias
-        self.cursor.execute("SELECT anomaly_name FROM anomalies_table")
-        anomalies = self.cursor.fetchall()
-        return [anomaly[0] for anomaly in anomalies]
+        anomalies = collection.find({}, {"anomaly_name": 1})
+        return [anomaly for anomaly in anomalies]
 
     def generate_report(self):
         anomaly = self.anomaly_var.get()
@@ -169,6 +139,23 @@ class DiagnosticsApp:
         doc.save('output_report.docx')
 
         messagebox.showinfo("Relatório Gerado", "Relatório gerado com sucesso.")
+
+    def add_photos_and_notes(self):
+        selected_anomalies = [anomaly for anomaly in self.anomalies if anomaly is not None]
+
+        for anomaly in selected_anomalies:
+            # Adicione aqui a lógica para adicionar campos de fotos e notas
+            print(f"Anomalia: {anomaly}")
+
+            # Exemplo: Pedir ao usuário para selecionar uma foto
+            file_path = filedialog.askopenfilename(title=f"Selecione uma foto para {anomaly}", filetypes=[("JPEG files", "*.jpg;*.jpeg")])
+            print(f"Foto selecionada: {file_path}")
+
+            # Exemplo: Pedir ao usuário para inserir notas de durabilidade e estrutural
+            durabilidade = input(f"Insira a nota de durabilidade para {anomaly} (1-5): ")
+            estrutural = input(f"Insira a nota estrutural para {anomaly} (1-5): ")
+            print(f"Notas - Durabilidade: {durabilidade}, Estrutural: {estrutural}")
+
 
 if __name__ == '__main__':
     root = tk.Tk()
