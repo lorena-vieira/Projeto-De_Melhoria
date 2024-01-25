@@ -3,6 +3,7 @@ from tkinter import messagebox
 from docxtpl import DocxTemplate
 from pymongo import MongoClient
 from tkinter import filedialog
+from docx import Document
 
 import utils
 import Tela1
@@ -15,14 +16,6 @@ if __name__ == '__main__':
     root.mainloop()
 
 
-#A seguir a criação de tela para seleção de patologias, inserção de fotos e classificação (notas)
-
-CONNECTION_STRING = "mongodb+srv://lorenavieira:lorenas2fabinho@cluster0.f65bx3a.mongodb.net/"
-client = MongoClient(CONNECTION_STRING)
-db = client['PatologiasDescricoes']
-collection = db['anomalias']
-
-
 class DiagnosticsApp:
     def __init__(self, root):
         self.root = root
@@ -32,9 +25,17 @@ class DiagnosticsApp:
         self.anomaly_label = tk.Label(root, text="Anomalias e não conformidades")
         self.anomaly_label.pack()
 
-        # Obtém anomalias do banco de dados
-        self.anomalies = self.fetch_anomalies()
-        self.selected_anomalies = []
+        # Variáveis para armazenar dados
+        self.nome_ponte = tk.StringVar()
+        self.data_diagnostico = tk.StringVar()
+        self.resultado_diagnostico = tk.StringVar()
+
+        # Variáveis para checkboxes
+        self.inadequacoes_contraventamento = tk.BooleanVar()
+        self.corrosao_media = tk.BooleanVar()
+        self.sujeira_vegetacao = tk.BooleanVar()
+        self.desgaste_pintura_corrosao_superficial = tk.BooleanVar()
+
 
         # Checkbox para anomalias
         self.anomalies_frame = tk.Frame(root)
