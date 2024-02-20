@@ -55,6 +55,9 @@ class RelatorioDiagnosticoApp:
 
 
     def gerar_relatorio(self):
+
+        lista_de_anomalias = []
+
         # Função que será chamada ao clicar no botão "Gerar Relatório"
         km_ponte = self.km_ponte.get()
 
@@ -75,29 +78,47 @@ class RelatorioDiagnosticoApp:
                                   "Além disso não existe um sistema efetivo de contraventamento no nível superior das vigas, o que é mais adequado. "
                                   "Ainda, o contraventamento possui ligações que não respeitam a recomendação mínima de 3 conectores. "
                                   "Essas condições não representam risco à segurança da operação ferroviária. Trata-se, portanto, de uma observação em caráter preventivo.")
-            doc.add_paragraph(texto_inadequacoes)
+            anomalias.append(texto_inadequacoes)
+            # doc.add_paragraph(texto_inadequacoes)
 
         if self.corrosao_media.get():
             texto_corrosao_media = ("É observada corrosão média nas vigas principais, com perdas de seção de aço, principalmente na região inferior das almas, "
                                     "próximo aos aparelhos de apoio. Cabe salientar, que as perdas na região inferior da alma das vigas principais representam risco à segurança estrutural.")
-            doc.add_paragraph(texto_corrosao_media)
+            anomalias.append(texto_corrosao_media)
+            # doc.add_paragraph(texto_corrosao_media)
 
         if self.sujeira_vegetacao.get():
             texto_sujeira_vegetacao = ("É possível observar vegetação e sujeira depositada sobre a estrutura metálica. Principalmente nas mesas inferiores, "
                                         "os detritos obstruem a drenagem e geram acúmulo de água.")
-            doc.add_paragraph(texto_sujeira_vegetacao)
+            anomalias.append(texto_sujeira_vegetacao)
+            # doc.add_paragraph(texto_sujeira_vegetacao)
 
         if self.desgaste_pintura_corrosao_superficial.get():
             texto_desgaste_pintura_corrosao = "A pintura da ponte encontra-se desgastada, e são observadas regiões de corrosão."
-            doc.add_paragraph(texto_desgaste_pintura_corrosao)
+            anomalias.append(texto_desgaste_pintura_corrosao)
+            # doc.add_paragraph(texto_desgaste_pintura_corrosao)
 
 
         # Salvar o documento modificado
         output_path = f"Relatorio_{km_ponte}.docx"
         doc.save(output_path)
 
+    def replace_placeholder(placeholder_to_be_replaced, text_to_replace, file_path, existing_document_path=None,
+                            output_path=None):
+        document = Document(file_path)
+        # eu acho que esse document.paragraphs serve, é minha tentativa de NÃO olhar caracter por caracter em uma string, que é bem lento e doloroso
+        print(document.paragraphs)
+        for paragraph in document.paragraphs:
+            if placeholder_to_be_replaced in paragraph.text:
+                paragraph.text = paragraph.text.replace(placeholder_to_be_replaced, text_to_replace)
+
+        # Save the modified document
+        document.save("output.docx")
+
+        placeholder_to_be_replaced.replace_placeholder("<ANOMALIA_E_NAO_CONFORMIDADE_PLACE_HOLDER_CUSTOM>", anomalias, existing_document_path)
+
         # Exibir mensagem de sucesso
-        messagebox.showinfo("Relatório Gerado", f"Relatório para a Ponte {km_ponte} criado com sucesso! Salvo em {output_path}")
+        messagebox.showinfo("Relatório Gerado", f"Relatório para a Ponte {placeholder_to_be_replaced.km_ponte} criado com sucesso! Salvo em {output_path}")
 
 
 
